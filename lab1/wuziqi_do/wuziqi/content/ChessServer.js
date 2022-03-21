@@ -1,3 +1,7 @@
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ' + err);
+   });
+
 var x,y,z,ctrl,step,s;
 
 var board=new Array();
