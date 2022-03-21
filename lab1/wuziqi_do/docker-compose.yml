@@ -1,0 +1,7 @@
+version: '3'
+services:
+  wuziqi_node:
+    build: ./wuziqi
+    container_name: wuziqi_node_container
+    ports:
+      - "8080:8080"

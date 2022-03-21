@@ -1,0 +1,19 @@
+version: '3'
+services:
+  mysql:
+    build: ./mysql/
+    container_name: ssm_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+    volumes:
+      - "./container_data/mysql/data:/var/lib/mysql"
+  ssm_demo:
+    build: ./ssm-demo/code/
+    container_name: ssm_demo
+    ports:
+      - "8888:8080"
+    links:
+      - mysql
+    depends_on:
+      - mysql
+  
