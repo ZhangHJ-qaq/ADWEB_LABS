@@ -38,43 +38,23 @@ function checkWin(x,y,z) {
 }
 
 var webSocketsServerPort=8080;
-var websocket=require('websocket')
 var webSocketServer=require('websocket').server;
 var http=require('http');
+const path = require('path');
 
 var clients=[];
 
 
-var url=require('url')
-var path=require('path')
-var fs=require('fs')
-var server=http.createServer(function(req,rsp){
-    let urlObj=url.parse(req.url)
-    let urlPathname=urlObj.pathname
-    let filePathname=path.join(__dirname,"/static",urlPathname)
-    console.log(filePathname)
-
-    fs.readFile(filePathname,(err,data)=>{
-        if(err){
-            rsp.writeHead(404)
-            rsp.write('404 - File is not found!')
-            rsp.end()
-        }else{
-            rsp.writeHead(200)
-            rsp.write(data)
-            rsp.end()
-        }
-    })
-
-});
 
 
+var server=http.createServer(function(request,response){});
 server.listen(webSocketsServerPort,function(){
     console.log((new Date())+"Server is listening on port "+webSocketsServerPort);
 });
 
 var wsServer=new webSocketServer({
-    httpServer:server
+    httpServer:server,
+    path:"/wuziqi_ws_server"
 });
 
 function gamestart() {

@@ -1,7 +1,17 @@
 version: '3'
 services:
-  wuziqi_node:
+  wuziqi_ws_server:
     build: ./wuziqi
-    container_name: wuziqi_node_container
+    container_name: wuziqi_ws_server
     ports:
       - "8080:8080"
+  wuziqi_nginx:
+    build: ./nginx
+    container_name: wuziqi_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - wuziqi_ws_server
+    links:
+      - wuziqi_ws_server
+    

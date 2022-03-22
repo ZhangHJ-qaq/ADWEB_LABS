@@ -91,10 +91,8 @@
                 for (var i=todel.length-1;i>=0;i--)
                     tobeupdate.remove(todel[i]);
             }
-
-            <!--var connection=new WebSocket('ws://127.0.0.1:8080');-->
 		 
-		   var connection=new WebSocket('ws://52.83.171.185:8080');
+		   var connection=new WebSocket(`ws://${window.location.host}/wuziqi_ws_server`);
             connection.onopen=function(){};
             connection.onerror=function(error){
                 alert("Can't connect to the server .")
