@@ -2,6 +2,67 @@
 
 19302010021 张皓捷
 
+## Lab1运行方法
+
+我为五子棋和ssm两个项目都写好了各自的Dockerfile和docker-compose.yml
+
+lab1的目录结构如下所示
+
+```
+├── ssm_demo_do
+│   ├── docker-compose.yml
+│   ├── mysql
+│   │   ├── Dockerfile
+│   │   ├── entrypoint.sh
+│   │   ├── mariadb.cnf
+│   │   └── sys_schema.sql
+│   └── ssm-demo
+│       └── code
+└── wuziqi_do
+    ├── docker-compose.yml
+    ├── nginx
+    │   ├── Dockerfile
+    │   ├── nginx.conf
+    │   └── static
+    └── wuziqi
+        ├── ChessServer.js
+        └── Dockerfile
+```
+
+### 运行五子棋
+
+进入wuziqi_do目录，运行以下指令
+
+```bash
+docker compose build
+docker compose up
+```
+
+通过
+
+```
+http://主机名称
+```
+
+即可访问到五子棋项目
+
+### 运行ssm
+
+进入ssm_demo_do目录，运行以下指令
+
+```bash
+docker compose build
+docker compose up
+```
+
+通过
+
+```
+http://主机名称:8080
+```
+
+即可访问到ssm项目
+
 ## VPC创建成功截图
 
 ![vpc_success](pics/vpc_success.png)
@@ -16,87 +77,64 @@
 
 ## 五子棋项目的部署
 
-### 静态文件服务器
+我将原来的ClientPage.html放在nginx服务器上作为静态文件，这样用户可以直接通过我们的主机名访问在线五子棋项目，而不需要另外将五子棋的客户端分发给用户
 
-我变更了原来五子棋项目中的文件结构，static文件夹为静态文件服务器的路径。这样客户端client.html也可以直接从服务器上获得，而不需要另外分发给用户。
+### 项目架构
 
-```
-wuziqi_do
-├── docker-compose.yml
-└── wuziqi
-    ├── Dockerfile
-    ├── content
-    │   ├── ChessServer.js
-    │   └── static
-    │       ├── CilentPage.html.bak
-    │       ├── Three.js
-    │       ├── TrackballControls.js
-    │       └── client.html
-    └── content.tar.gz
-```
+![wuziqi_architecture](pics/wuziqi_architecture.png)
 
-用nodejs实现一个简单的静态文件服务器。
-
-```javascript
-var url=require('url')
-var path=require('path')
-var fs=require('fs')
-var server=http.createServer(function(req,rsp){
-    let urlObj=url.parse(req.url)
-    let urlPathname=urlObj.pathname
-    let filePathname=path.join(__dirname,"/static",urlPathname)
-    console.log(filePathname)
-
-    fs.readFile(filePathname,(err,data)=>{
-        if(err){
-            rsp.writeHead(404)
-            rsp.write('404 - File is not found!')
-            rsp.end()
-        }else{
-            rsp.writeHead(200)
-            rsp.write(data)
-            rsp.end()
-        }
-    })
-});
-```
-
-### 使用Dockerfile构建和Docker-Compose部署
-
-#### Dockerfile
-
-从nodejs的image开始构建。将源代码复制到容器内，并使用npm安装websocket等组件。最后用node启动服务器。
+### 在NodeJS容器中运行五子棋服务器
 
 ```dockerfile
 FROM node:16
 RUN mkdir -p /huajuan/wuziqi
-COPY "./content.tar.gz" "/huajuan/wuziqi"
 WORKDIR /huajuan/wuziqi
-RUN  tar -zxvf ./content.tar.gz
-WORKDIR /huajuan/wuziqi/content
+COPY "./ChessServer.js" "/huajuan/wuziqi"
 RUN npm install websocket && npm install ws
-CMD ["node" ,"/huajuan/wuziqi/content/ChessServer.js" ]
+CMD ["node" ,"/huajuan/wuziqi/ChessServer.js" ]
 ```
 
-#### Docker-Compose
+### 运行并配置Nginx容器
 
-使用Docker-Compose，将node容器的8080端口映射到宿主机的8080端口。
-
-```yaml
-version: '3'
-services:
-  wuziqi_node:
-    build: ./wuziqi
-    container_name: wuziqi_node_container
-    ports:
-      - "8080:8080"
+```dockerfile
+FROM nginx:1.21.6
+RUN mkdir /huajuan
+COPY ./static /huajuan #复制静态文件到nginx容器中
+COPY ./nginx.conf /etc/nginx/nginx.conf #复制nginx配置文件
 ```
 
-### 部署成功的截图
+```
+		map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+    server {
+        listen 80;
+        server_name 127.0.0.1;
 
-![wuziqi_success](pics/wuziqi_success.jpg)
+        location /wuziqi_ws_server {
+            proxy_pass http://wuziqi_ws_server:8080/wuziqi_ws_server;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+        }
+
+        location / {
+            root /huajuan;
+            index client.html;
+        }
+    }
+```
+
+### 运行成功的截图
+
+![wuziqi_success](pics/wuziqi_success.png)
 
 ## SSM项目的部署
+
+### 项目架构
+
+![ssm_architecture](pics/ssm_architecture.png)
 
 ### 在容器中运行SSM项目
 
