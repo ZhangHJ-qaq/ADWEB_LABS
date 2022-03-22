@@ -6,7 +6,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
     volumes:
-      - "./container_data/mysql/data:/var/lib/mysql"
+      - "~/container_data/mysql/data:/var/lib/mysql"
   ssm_demo:
     build: ./ssm-demo/code/
     container_name: ssm_demo
