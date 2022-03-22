@@ -3,8 +3,6 @@ services:
   wuziqi_ws_server:
     build: ./wuziqi
     container_name: wuziqi_ws_server
-    ports:
-      - "8080:8080"
   wuziqi_nginx:
     build: ./nginx
     container_name: wuziqi_nginx
